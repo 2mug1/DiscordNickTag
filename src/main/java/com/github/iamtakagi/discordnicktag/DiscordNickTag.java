@@ -2,10 +2,9 @@ package com.github.iamtakagi.discordnicktag;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-import org.bukkit.Bukkit;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -22,8 +21,6 @@ import com.nametagedit.plugin.NametagEdit;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.ISnowflake;
-import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class DiscordNickTag extends JavaPlugin {
 
@@ -71,7 +68,8 @@ public class DiscordNickTag extends JavaPlugin {
           public void run() {
             NametagEdit.getApi().setPrefix(player, String.format(DiscordNickTag.this.config.format, nickname));
             if (DiscordNickTag.this.config.displayNameEnabled) {
-              player.setDisplayName(NametagEdit.getApi().getNametag(player).getPrefix() + player.getName() + NametagEdit.getApi().getNametag(player).getSuffix());
+              player.setDisplayName(NametagEdit.getApi().getNametag(player).getPrefix() + player.getName()
+                  + NametagEdit.getApi().getNametag(player).getSuffix());
             }
           }
         }.runTaskLater(DiscordNickTag.this, 1);
@@ -82,7 +80,8 @@ public class DiscordNickTag extends JavaPlugin {
           public void run() {
             NametagEdit.getApi().setSuffix(player, String.format(DiscordNickTag.this.config.format, nickname));
             if (DiscordNickTag.this.config.displayNameEnabled) {
-              player.setDisplayName(NametagEdit.getApi().getNametag(player).getPrefix() + player.getName() + NametagEdit.getApi().getNametag(player).getSuffix());
+              player.setDisplayName(NametagEdit.getApi().getNametag(player).getPrefix() + player.getName()
+                  + NametagEdit.getApi().getNametag(player).getSuffix());
             }
           }
         }.runTaskLater(DiscordNickTag.this, 1);
@@ -156,32 +155,50 @@ public class DiscordNickTag extends JavaPlugin {
   class CommandExecutorImpl implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
       if (sender instanceof Player) {
-        if (args.length == 1) {
-          if (jda.getGuildById(DiscordNickTag.this.config.discordServerId).retrieveMemberById(args[0])
-              .complete() == null) {
-            sender.sendMessage("DiscordNickTag: No found user " + args[0]);
-            return false;
-          }
-          Player player = (Player) sender;
+        Player player = (Player) sender;
+        if (args.length == 2 && args[0].equalsIgnoreCase("sync")){
           try {
+            if (jda.getGuildById(DiscordNickTag.this.config.discordServerId).retrieveMemberById(args[1])
+                .complete() == null) {
+              player.sendMessage("DiscordNickTag: No found user " + args[1]);
+              return true;
+            }
+            if (!NumberUtils.isNumber(args[1])) {
+              player.sendMessage("DiscordNickTag: Invalid syntax of Discord ID " + args[1]);
+              return true;
+            }
+            if (DiscordNickTag.this.config.players.containsKey(player.getUniqueId())) {
+              player.sendMessage("DiscordNickTag: You have already been syncronized with " + args[1]);
+              return true;
+            }
             DiscordNickTag.this.config.players.put(player.getUniqueId(), new ISnowflake() {
               @Override
               public long getIdLong() {
-                return Long.parseLong(args[0]);
+                return Long.parseLong(args[1]);
               }
             });
-            player.sendMessage(
-                "DiscordNickTag: Your nickname is " + DiscordNickTag.this.getDiscordNickname(player.getUniqueId()));
             DiscordNickTag.this.getConfig().set("players", DiscordNickTag.this.config.players.entrySet().stream()
                 .map(e -> e.getKey().toString() + ":" + e.getValue().getIdLong()).collect(Collectors.toList()));
             DiscordNickTag.this.saveConfig();
             DiscordNickTag.this.setNickTag(player, DiscordNickTag.this.getDiscordNickname(player.getUniqueId()));
-            player.sendMessage(args[0] + " is now syncronized with your Minecraft account.");
+            player.sendMessage(args[1] + " is now syncronized with your Minecraft account.");
             return true;
           } catch (NumberFormatException e) {
-            getLogger().log(Level.WARNING, "DiscordNickTag: Invalid Discord ID " + args[0]);
-            return false;
+            player.sendMessage("DiscordNickTag: Invalid syntax of Discord ID " + args[1]);
+            return true;
           }
+        }
+        if (args.length == 1 && args[0].equalsIgnoreCase("desync")){
+          if (!DiscordNickTag.this.config.players.containsKey(player.getUniqueId())) {
+            player.sendMessage("DiscordNickTag: You have not been syncronized with your Discord account.");
+            return true;
+          }
+          DiscordNickTag.this.config.players.remove(player.getUniqueId());
+          DiscordNickTag.this.getConfig().set("players", DiscordNickTag.this.config.players.entrySet().stream()
+              .map(e -> e.getKey().toString() + ":" + e.getValue().getIdLong()).collect(Collectors.toList()));
+          DiscordNickTag.this.saveConfig();
+          player.sendMessage("DiscordNickTag: You are now desyncronized with your Discord account.");
+          return true;
         }
       }
       return false;

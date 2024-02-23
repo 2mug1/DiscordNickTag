@@ -1,8 +1,8 @@
 discord:
-  token: ""
-  server_id: ""
+  token: ''
+  server_id: ''
 tag: 
-  position: "SUFFIX"
-  format: " &r(%s)"
+  position: 'SUFFIX'
+  format: ' &9(%s)'
   display_name_enabled: true
 players: []

@@ -1,5 +1,5 @@
 name: DiscordNickTag
-version: 1.0.1
+version: 1.0.2
 main: com.github.iamtakagi.discordnicktag.DiscordNickTag
 author: iamtakagi
 api-version: 1.20
@@ -7,6 +7,5 @@ depend: [NametagEdit]
 commands:
   discordnicktag:
     description: DiscordNickTag command
-    usage: /<command>
     permission: dnt.command
     aliases: [dnt]
