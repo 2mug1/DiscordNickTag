@@ -73,7 +73,7 @@ public class DiscordNickTag extends JavaPlugin {
             NametagEdit.getApi().setPrefix(player, String.format(DiscordNickTag.this.config.format, nickname));
             if (DiscordNickTag.this.config.displayNameEnabled) {
               player.setDisplayName(
-                  player.getDisplayName() +
+                  player.getName() +
                       String.format(DiscordNickTag.this.config.format, nickname));
             }
           }
@@ -86,7 +86,7 @@ public class DiscordNickTag extends JavaPlugin {
             NametagEdit.getApi().setSuffix(player, String.format(DiscordNickTag.this.config.format, nickname));
             if (DiscordNickTag.this.config.displayNameEnabled) {
               player.setDisplayName(
-                  player.getDisplayName() + String.format(DiscordNickTag.this.config.format, nickname));
+                  player.getName() + String.format(DiscordNickTag.this.config.format, nickname));
             }
           }
         }.runTaskLater(DiscordNickTag.this, 1);
@@ -158,17 +158,30 @@ public class DiscordNickTag extends JavaPlugin {
   }
 
   public class DiscordListener extends ListenerAdapter {
-    public void onGuildMemberNickChange(GuildMemberUpdateNicknameEvent event) {
+    @Override
+    public void onGuildMemberUpdateNickname(GuildMemberUpdateNicknameEvent event) {
       if (event.getMember().getUser().isBot()) {
         return;
       }
+      if (DiscordNickTag.this.config.players.entrySet().stream()
+          .noneMatch(e -> e.getValue().getIdLong() == event.getMember().getIdLong())) {
+        return;
+      }
       Player player = Bukkit.getPlayer(DiscordNickTag.this.config.players.entrySet().stream()
-          .filter(e -> e.getValue().getIdLong() == event.getMember().getIdLong()).map(Map.Entry::getKey).findFirst()
-          .orElse(null));
+          .filter(e -> e.getValue().getIdLong() == event.getMember().getIdLong()).findFirst().get().getKey());
       DiscordNickTag.this.setNickTag(player, event.getNewNickname());
-      DiscordNickTag.this.saveConfig();
       player.sendMessage("DiscordNickTag: Your nickname tag has been updated to " + event.getNewNickname());
     }
+    public void onUserUpdateName(net.dv8tion.jda.api.events.user.update.UserUpdateNameEvent event) {
+      if (DiscordNickTag.this.config.players.entrySet().stream()
+          .noneMatch(e -> e.getValue().getIdLong() == event.getUser().getIdLong())) {
+        return;
+      }
+      Player player = Bukkit.getPlayer(DiscordNickTag.this.config.players.entrySet().stream()
+          .filter(e -> e.getValue().getIdLong() == event.getUser().getIdLong()).findFirst().get().getKey());
+      DiscordNickTag.this.setNickTag(player, event.getNewName());
+      player.sendMessage("DiscordNickTag: Your nickname tag has been updated to " + event.getNewName());
+    };
   }
 
   class CommandExecutorImpl implements CommandExecutor {
