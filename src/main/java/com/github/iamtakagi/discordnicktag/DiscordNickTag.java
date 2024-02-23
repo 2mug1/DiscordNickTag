@@ -71,9 +71,7 @@ public class DiscordNickTag extends JavaPlugin {
           public void run() {
             NametagEdit.getApi().setPrefix(player, String.format(DiscordNickTag.this.config.format, nickname));
             if (DiscordNickTag.this.config.displayNameEnabled) {
-              player.setDisplayName(
-                  player.getName() +
-                      String.format(DiscordNickTag.this.config.format, nickname));
+              player.setDisplayName(NametagEdit.getApi().getNametag(player).getPrefix() + player.getName() + NametagEdit.getApi().getNametag(player).getSuffix());
             }
           }
         }.runTaskLater(DiscordNickTag.this, 1);
@@ -84,8 +82,7 @@ public class DiscordNickTag extends JavaPlugin {
           public void run() {
             NametagEdit.getApi().setSuffix(player, String.format(DiscordNickTag.this.config.format, nickname));
             if (DiscordNickTag.this.config.displayNameEnabled) {
-              player.setDisplayName(
-                  player.getName() + String.format(DiscordNickTag.this.config.format, nickname));
+              player.setDisplayName(NametagEdit.getApi().getNametag(player).getPrefix() + player.getName() + NametagEdit.getApi().getNametag(player).getSuffix());
             }
           }
         }.runTaskLater(DiscordNickTag.this, 1);
