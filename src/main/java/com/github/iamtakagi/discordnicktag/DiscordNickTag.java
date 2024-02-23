@@ -47,7 +47,7 @@ public class DiscordNickTag extends JavaPlugin {
     this.jda = JDABuilder.createDefault(this.config.getDiscordToken())
         .build();
     this.getCommand("discordnicktag").setExecutor(new CommandExecutorImpl());
-    this.getServer().getPluginManager().registerEvents(new MinecraftListener(), this);
+    this.getServer().getPluginManager().registerEvents(new ListenerImpl(), this);
   }
 
   public String getDiscordNickname(UUID uuid) {
@@ -139,7 +139,7 @@ public class DiscordNickTag extends JavaPlugin {
     }
   }
 
-  class MinecraftListener implements Listener {
+  class ListenerImpl implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
       if (event.getPlayer() == null) {
