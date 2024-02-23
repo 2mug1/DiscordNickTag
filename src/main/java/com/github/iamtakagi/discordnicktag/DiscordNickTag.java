@@ -45,7 +45,6 @@ public class DiscordNickTag extends JavaPlugin {
       return;
     }
     this.jda = JDABuilder.createDefault(this.config.getDiscordToken())
-        .addEventListeners(new DiscordListener())
         .build();
     this.getCommand("discordnicktag").setExecutor(new CommandExecutorImpl());
     this.getServer().getPluginManager().registerEvents(new MinecraftListener(), this);
@@ -155,33 +154,6 @@ public class DiscordNickTag extends JavaPlugin {
       }
       setNickTag(event.getPlayer(), getDiscordNickname(event.getPlayer().getUniqueId()));
     }
-  }
-
-  public class DiscordListener extends ListenerAdapter {
-    @Override
-    public void onGuildMemberUpdateNickname(GuildMemberUpdateNicknameEvent event) {
-      if (event.getMember().getUser().isBot()) {
-        return;
-      }
-      if (DiscordNickTag.this.config.players.entrySet().stream()
-          .noneMatch(e -> e.getValue().getIdLong() == event.getMember().getIdLong())) {
-        return;
-      }
-      Player player = Bukkit.getPlayer(DiscordNickTag.this.config.players.entrySet().stream()
-          .filter(e -> e.getValue().getIdLong() == event.getMember().getIdLong()).findFirst().get().getKey());
-      DiscordNickTag.this.setNickTag(player, event.getNewNickname());
-      player.sendMessage("DiscordNickTag: Your nickname tag has been updated to " + event.getNewNickname());
-    }
-    public void onUserUpdateName(net.dv8tion.jda.api.events.user.update.UserUpdateNameEvent event) {
-      if (DiscordNickTag.this.config.players.entrySet().stream()
-          .noneMatch(e -> e.getValue().getIdLong() == event.getUser().getIdLong())) {
-        return;
-      }
-      Player player = Bukkit.getPlayer(DiscordNickTag.this.config.players.entrySet().stream()
-          .filter(e -> e.getValue().getIdLong() == event.getUser().getIdLong()).findFirst().get().getKey());
-      DiscordNickTag.this.setNickTag(player, event.getNewName());
-      player.sendMessage("DiscordNickTag: Your nickname tag has been updated to " + event.getNewName());
-    };
   }
 
   class CommandExecutorImpl implements CommandExecutor {
